@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <title>Sunil Live Esports</title>
+    
+    <!-- LIBRARIES -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* APP STYLES - NO BROWSER FEEL */
+        body { 
+            background-color: #000; 
+            color: white; 
+            font-family: 'Rajdhani', sans-serif; 
+            overflow: hidden; /* Prevent body scroll */
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .font-teko { font-family: 'Teko', sans-serif; }
+        
+        /* Full Screen App Container */
+        #app-root {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; flex-direction: column;
+            background: radial-gradient(circle at center, #1a2035 0%, #000000 100%);
+        }
+
+        /* Scrollable Content Area */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 80px; /* Space for bottom nav */
+            -webkit-overflow-scrolling: touch;
+        }
+        .content-area::-webkit-scrollbar { display: none; }
+
+        /* Neon Effects */
+        .neon-border { box-shadow: 0 0 10px rgba(0, 255, 255, 0.3), inset 0 0 5px rgba(0, 255, 255, 0.1); border: 1px solid rgba(0, 255, 255, 0.4); }
+        .neon-text { text-shadow: 0 0 10px rgba(0, 255, 255, 0.8); }
+        
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(20, 20, 30, 0.85);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Animations */
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .anim-slide { animation: slideIn 0.3s ease-out forwards; }
+        
+        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); } }
+        .btn-pulse { animation: pulse-ring 2s infinite; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- CONFIG ---
+        const ADMIN_PIN = "8127205425mahi";
+        const UPI_ID = "9170744521@upi";
+
+        // --- SPLASH SCREEN ---
+        const Splash = ({ onFinish }) => {
+            useEffect(() => { setTimeout(onFinish, 2500); }, []);
+            return (
+                <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
+                    <div className="w-24 h-24 rounded-full border-4 border-cyan-500 flex items-center justify-center mb-4 btn-pulse relative">
+                        <span className="text-5xl font-teko font-bold italic text-white">S</span>
+                        <div className="absolute inset-0 rounded-full border-t-4 border-white animate-spin"></div>
+                    </div>
+                    <h1 className="text-3xl font-teko tracking-widest text-cyan-400">SUNIL ESPORTS</h1>
+                    <p className="text-xs text-gray-500 mt-2 tracking-[0.5em]">LOADING RESOURCES</p>
+                </div>
+            );
+        };
+
+        // --- MATCH CARD ---
+        const MatchCard = ({ match, onJoin }) => (
+            <div className="bg-[#111] rounded-lg overflow-hidden mb-4 border border-gray-800 anim-slide shadow-lg">
+                <div className="relative h-32">
+                    <img src="https://images.hdqwalls.com/wallpapers/garena-free-fire-4k-2020-5s.jpg" className="w-full h-full object-cover opacity-60" />
+                    <div className="absolute top-2 left-2 bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded clip-path-slant">{match.type}</div>
+                    <div className="absolute bottom-2 right-2 bg-black/80 text-cyan-400 text-xs px-2 py-0.5 rounded font-mono border border-cyan-500/30">
+                        {match.joined}/{match.total} Left
+                    </div>
+                </div>
+                <div className="p-3">
+                    <div className="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 className="text-lg font-teko font-bold leading-none text-white">{match.title}</h3>
+                            <span className="text-[10px] text-gray-400 uppercase tracking-wide">{match.map} • {match.time}</span>
+                        </div>
+                        <div className="text-right">
+                            <span className="block text-[10px] text-gray-500">PRIZE POOL</span>
+                            <span className="text-yellow-400 font-bold text-lg leading-none">₹{match.prize}</span>
+                        </div>
+                    </div>
+                    
+                    <div className="flex gap-2 mt-3">
+                        <div className="bg-[#1a1a1a] flex-1 py-1 px-2 rounded border border-gray-800 text-center">
+                            <span className="text-[10px] text-gray-500 block">ENTRY FEE</span>
+                            <span className="text-white font-bold">₹{match.fee}</span>
+                        </div>
+                        <button 
+                            onClick={() => onJoin(match)}
+                            disabled={match.joined >= match.total}
+                            className={`flex-1 rounded font-bold text-sm tracking-wider ${match.joined >= match.total ? 'bg-gray-700 text-gray-400' : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-500/20'}`}
+                        >
+                            {match.joined >= match.total ? 'FULL' : 'JOIN NOW'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // --- MAIN APP ---
+        const App = () => {
+            const [loading, setLoading] = useState(true);
+            const [view, setView] = useState('login'); // login, home, wallet, admin
+            const [activeTab, setActiveTab] = useState('matches'); // matches, results, profile
+            const [user, setUser] = useState(null);
+            const [balance, setBalance] = useState(0);
+            
+            // Admin Logic
+            const [tapCount, setTapCount] = useState(0);
+            
+            // Data
+            const [matches, setMatches] = useState([
+                { id: 1, title: "Solo Rush #402", map: "Bermuda", type: "SOLO", fee: 20, prize: 300, time: "04:00 PM", joined: 12, total: 48 },
+                { id: 2, title: "Squad War #99", map: "Purgatory", type: "SQUAD", fee: 80, prize: 1200, time: "06:00 PM", joined: 45, total: 48 },
+                { id: 3, title: "Duo Sniper Only", map: "Kalahari", type: "DUO", fee: 40, prize: 600, time: "08:00 PM", joined: 20, total: 48 },
+            ]);
+
+            useEffect(() => {
+                const u = localStorage.getItem('app_user');
+                const b = localStorage.getItem('app_bal');
+                if(u) {
+                    setUser(JSON.parse(u));
+                    setBalance(b ? parseInt(b) : 0);
+                    setView('home');
+                }
+            }, []);
+
+            const updateBalance = (amt) => {
+                const newBal = balance + amt;
+                setBalance(newBal);
+                localStorage.setItem('app_bal', newBal);
+            };
+
+            const handleLogin = (method, val) => {
+                const u = { name: "Gamer", uid: "SL" + Math.floor(10000 + Math.random() * 90000), phone: val || "Google" };
+                setUser(u);
+                localStorage.setItem('app_user', JSON.stringify(u));
+                setView('home');
+            };
+
+            const handleJoin = (m) => {
+                if(balance < m.fee) {
+                    alert("Low Balance! Please Add Money.");
+                    setView('wallet');
+                    return;
+                }
+                if(confirm(`Confirm join for ₹${m.fee}?`)) {
+                    updateBalance(-m.fee);
+                    alert("Joined Successfully! Room ID/Pass will be sent via WhatsApp.");
+                    window.open(`https://wa.me/919170744521?text=I joined Match ${m.id} (UID: ${user.uid})`, '_blank');
+                }
+            };
+
+            // Admin Access (6 Taps on Logo)
+            const handleLogoTap = () => {
+                setTapCount(p => p+1);
+                if(tapCount+1 === 6) {
+                    const pin = prompt("Admin PIN:");
+                    if(pin === ADMIN_PIN) setView('admin');
+                    else alert("Access Denied");
+                    setTapCount(0);
+                }
+                setTimeout(() => setTapCount(0), 1000);
+            };
+
+            if(loading) return <Splash onFinish={() => setLoading(false)} />;
+
+            // --- 1. LOGIN SCREEN ---
+            if(view === 'login') return (
+                <div className="h-full flex flex-col justify-center p-8 bg-[url('https://images.hdqwalls.com/wallpapers/garena-free-fire-4k-2020-5s.jpg')] bg-cover bg-center relative">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+                    <div className="relative z-10 text-center">
+                        <div className="w-24 h-24 bg-cyan-600 rounded-2xl mx-auto mb-6 flex items-center justify-center rotate-45 shadow-[0_0_30px_rgba(6,182,212,0.5)] border-4 border-black">
+                            <span className="text-5xl font-teko font-bold text-white -rotate-45">S</span>
+                        </div>
+                        <h1 className="text-4xl font-teko text-white font-bold leading-none mb-1">SUNIL LIVE <span className="text-cyan-400">ESPORTS</span></h1>
+                        <p className="text-gray-400 text-sm mb-10 tracking-wider">PLAY • COMPETE • EARN</p>
+
+                        <button onClick={() => handleLogin('google')} className="w-full bg-white text-black font-bold py-3.5 rounded-lg mb-3 flex items-center justify-center gap-3 shadow-lg active:scale-95 transition">
+                            <i className="fa-brands fa-google text-red-500"></i> Continue with Google
+                        </button>
+                        <button onClick={() => { const p = prompt("Phone Number:"); if(p) handleLogin('phone', p); }} className="w-full bg-slate-800 text-white border border-slate-600 font-bold py-3.5 rounded-lg flex items-center justify-center gap-3 active:scale-95 transition">
+                            <i className="fa-solid fa-phone"></i> Use Phone Number
+                        </button>
+                    </div>
+                </div>
+            );
+
+            // --- 2. MAIN APP STRUCTURE ---
+            return (
+                <div id="app-root">
+                    {/* Top Bar */}
+                    <div className="h-16 glass-panel flex justify-between items-center px-4 z-20 relative">
+                        <div className="flex items-center gap-3" onClick={handleLogoTap}>
+                            <div className="w-8 h-8 bg-cyan-600 rounded flex items-center justify-center font-bold font-teko text-xl">S</div>
+                            <div>
+                                <h1 className="font-teko font-bold text-lg leading-none tracking-wide text-white">SUNIL <span className="text-cyan-400">LIVE</span></h1>
+                                <p className="text-[9px] text-gray-400 font-mono">ID: {user?.uid}</p>
+                            </div>
+                        </div>
+                        <div onClick={() => setView('wallet')} className="bg-slate-900 border border-yellow-600/30 px-3 py-1 rounded flex items-center gap-2 active:bg-slate-800 transition">
+                            <i className="fa-solid fa-wallet text-yellow-400 text-xs"></i>
+                            <span className="font-mono font-bold text-sm">₹{balance}</span>
+                        </div>
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="content-area p-4">
+                        
+                        {/* ADMIN VIEW */}
+                        {view === 'admin' && (
+                            <div className="bg-slate-800 p-4 rounded-xl border border-red-500/30">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-red-500 font-teko text-2xl">ADMIN PANEL</h2>
+                                    <button onClick={() => setView('home')} className="text-gray-400"><i className="fa-solid fa-times"></i></button>
+                                </div>
+                                <input id="newTitle" className="w-full bg-black p-2 rounded text-white mb-2" placeholder="Match Title" />
+                                <div className="flex gap-2 mb-2">
+                                    <input id="newFee" type="number" className="w-full bg-black p-2 rounded text-white" placeholder="Fee" />
+                                    <input id="newPrize" type="number" className="w-full bg-black p-2 rounded text-white" placeholder="Prize" />
+                                </div>
+                                <button onClick={() => {
+                                    const t = document.getElementById('newTitle').value;
+                                    const f = document.getElementById('newFee').value;
+                                    const p = document.getElementById('newPrize').value;
+                                    if(t && f && p) {
+                                        setMatches([...matches, { id: Date.now(), title: t, map: "Random", type: "SOLO", fee: parseInt(f), prize: parseInt(p), time: "TBA", joined: 0, total: 48 }]);
+                                        alert("Match Added!");
+                                    }
+                                }} className="w-full bg-blue-600 py-2 rounded font-bold">ADD MATCH</button>
+                                <button onClick={() => { localStorage.clear(); window.location.reload(); }} className="w-full bg-red-900/50 text-red-200 py-2 rounded font-bold mt-4">RESET APP</button>
+                            </div>
+                        )}
+
+                        {/* WALLET VIEW */}
+                        {view === 'wallet' && (
+                            <div className="anim-slide">
+                                <div className="bg-gradient-to-br from-slate-800 to-black p-6 rounded-2xl border border-yellow-500/20 text-center mb-6 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-full blur-xl"></div>
+                                    <p className="text-gray-400 text-xs font-bold tracking-widest uppercase">Available Balance</p>
+                                    <h1 className="text-5xl font-teko font-bold text-white mt-1">₹{balance}</h1>
+                                </div>
+
+                                <div className="bg-[#111] p-4 rounded-xl border border-gray-800 mb-4">
+                                    <h3 className="font-bold text-cyan-400 mb-3 text-sm uppercase tracking-wide">Add Money (QR)</h3>
+                                    <div className="bg-white p-2 rounded-lg w-40 h-40 mx-auto mb-4">
+                                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=${UPI_ID}&pn=SunilEsports&cu=INR`} className="w-full h-full" />
+                                    </div>
+                                    <p className="text-center text-xs text-gray-500 mb-4">Scan using Any UPI App</p>
+                                    <button onClick={() => {
+                                        const amt = prompt("Enter Amount Paid:");
+                                        const utr = prompt("Enter UTR:");
+                                        if(amt && utr) {
+                                            updateBalance(parseInt(amt));
+                                            alert(`₹${amt} Added via UTR: ${utr}`);
+                                        }
+                                    }} className="w-full bg-green-600 py-3 rounded-lg font-bold text-sm">I HAVE PAID (VERIFY)</button>
+                                </div>
+                                <button onClick={() => setView('home')} className="w-full py-3 text-gray-500 text-sm">Go Back</button>
+                            </div>
+                        )}
+
+                        {/* HOME VIEW */}
+                        {view === 'home' && (
+                            <>
+                                {/* Hero Slider */}
+                                <div className="relative h-48 rounded-xl overflow-hidden mb-6 border border-cyan-500/30 shadow-lg">
+                                    <img src="https://wallpapers.com/images/featured/free-fire-4k-i977r14138092421.jpg" className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent flex flex-col justify-end p-4">
+                                        <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded w-fit mb-1">LIVE</span>
+                                        <h2 className="text-2xl font-teko font-bold leading-none text-white">BATTLE FOR GLORY</h2>
+                                        <p className="text-xs text-gray-300">Join daily tournaments & win real cash.</p>
+                                    </div>
+                                </div>
+
+                                {/* Tabs */}
+                                <div className="flex bg-[#111] p-1 rounded-lg mb-4">
+                                    {['matches', 'results'].map(tab => (
+                                        <button 
+                                            key={tab}
+                                            onClick={() => setActiveTab(tab)}
+                                            className={`flex-1 py-2 text-xs font-bold uppercase rounded tracking-wider ${activeTab===tab ? 'bg-slate-800 text-white shadow' : 'text-gray-500'}`}
+                                        >
+                                            {tab}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* List */}
+                                <div className="pb-4">
+                                    {matches.map(m => (
+                                        <MatchCard key={m.id} match={m} onJoin={handleJoin} />
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* BOTTOM NAV */}
+                    {view !== 'login' && (
+                        <div className="glass-panel h-16 fixed bottom-0 left-0 w-full flex justify-around items-center z-40 px-2 pb-2">
+                            <button onClick={() => setView('home')} className={`flex flex-col items-center gap-1 p-2 ${view==='home'?'text-cyan-400':'text-gray-500'}`}>
+                                <i className="fa-solid fa-gamepad text-xl"></i>
+                                <span className="text-[10px] font-bold">PLAY</span>
+                            </button>
+                            <button onClick={() => setView('wallet')} className={`flex flex-col items-center gap-1 p-2 ${view==='wallet'?'text-cyan-400':'text-gray-500'}`}>
+                                <i className="fa-solid fa-wallet text-xl"></i>
+                                <span className="text-[10px] font-bold">WALLET</span>
+                            </button>
+                            <button onClick={() => window.open('https://wa.me/919170744521', '_blank')} className="flex flex-col items-center gap-1 p-2 text-gray-500">
+                                <i className="fa-brands fa-whatsapp text-xl"></i>
+                                <span className="text-[10px] font-bold">HELP</span>
+                            </button>
+                            <button onClick={() => { localStorage.clear(); window.location.reload(); }} className="flex flex-col items-center gap-1 p-2 text-gray-500">
+                                <i className="fa-solid fa-user text-xl"></i>
+                                <span className="text-[10px] font-bold">LOGOUT</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
