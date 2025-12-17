@@ -1,358 +1,821 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#000000">
-    <title>Sunil Live Esports</title>
     
-    <!-- LIBRARIES -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- SEO & Ads -->
+    <meta name="google-site-verification" content="Ci1cOjwX1r74wDvPpXAQJ05fCV3gvG7MBn0VT86s1nI" />
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4497608690186719" crossorigin="anonymous"></script>
+    <meta name="description" content="Join Sunil Live Esports - The ultimate Free Fire Tournament Platform. Win cash prizes.">
+    <title>Sunil Live Esports - 3D Tournament Platform</title>
+    
+    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        /* APP STYLES - NO BROWSER FEEL */
-        body { 
-            background-color: #000; 
-            color: white; 
-            font-family: 'Rajdhani', sans-serif; 
-            overflow: hidden; /* Prevent body scroll */
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
+        body { font-family: 'Rajdhani', sans-serif; background-color: #000; background-image: radial-gradient(circle at 50% 50%, #0f172a 0%, #000000 100%); color: white; overflow-x: hidden; margin: 0; perspective: 1000px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        h1, h2, h3, input, button, select { font-family: 'Orbitron', sans-serif; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+        #joinersList { position: fixed; bottom: 80px; left: 10px; z-index: 40; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        #toast-container { position: fixed; top: 10%; right: 5%; z-index: 1000; }
         
-        .font-teko { font-family: 'Teko', sans-serif; }
+        /* 3D Buttons */
+        .btn-3d-cyan { background: linear-gradient(to bottom, #06b6d4, #0891b2); color: white; border: none; border-radius: 4px; box-shadow: 0px 4px 0px 0px #155e75, 0 0 15px rgba(6,182,212,0.6); transition: all 0.1s; position: relative; top: 0; clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%); }
+        .btn-3d-cyan:active { top: 4px; box-shadow: 0px 0px 0px 0px #155e75; }
+        .btn-3d-cyan:disabled { background: #374151; box-shadow: none; cursor: not-allowed; filter: grayscale(1); }
         
-        /* Full Screen App Container */
-        #app-root {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            display: flex; flex-direction: column;
-            background: radial-gradient(circle at center, #1a2035 0%, #000000 100%);
-        }
+        .glass-panel { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); border: 1px solid rgba(6, 182, 212, 0.3); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8); transition: transform 0.2s; border-bottom: 3px solid #06b6d4; }
+        
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        .video-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); pointer-events: none; }
 
-        /* Scrollable Content Area */
-        .content-area {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 80px; /* Space for bottom nav */
-            -webkit-overflow-scrolling: touch;
-        }
-        .content-area::-webkit-scrollbar { display: none; }
-
-        /* Neon Effects */
-        .neon-border { box-shadow: 0 0 10px rgba(0, 255, 255, 0.3), inset 0 0 5px rgba(0, 255, 255, 0.1); border: 1px solid rgba(0, 255, 255, 0.4); }
-        .neon-text { text-shadow: 0 0 10px rgba(0, 255, 255, 0.8); }
+        /* Slot Card */
+        .slot-card { position: relative; overflow: hidden; border-radius: 12px; background: #111; border: 1px solid #333; transition: transform 0.3s, border-color 0.3s; }
+        .slot-card:hover { transform: translateY(-5px); border-color: #06b6d4; }
+        .slot-img-wrap { height: 140px; position: relative; overflow: hidden; }
+        .slot-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; opacity: 0.8; }
+        .slot-card:hover .slot-img { transform: scale(1.1); opacity: 1; }
+        .slot-badge { position: absolute; top: 8px; right: 8px; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; z-index: 10; }
+        .progress-bar { transition: width 0.5s ease-in-out; }
         
-        /* Glassmorphism */
-        .glass-panel {
-            background: rgba(20, 20, 30, 0.85);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        /* Compact Inputs */
+        .compact-input {
+            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #4b5563; 
+            padding: 8px 12px; font-size: 13px; color: white; border-radius: 6px;
+            outline: none; transition: 0.2s;
         }
-
-        /* Animations */
-        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .anim-slide { animation: slideIn 0.3s ease-out forwards; }
+        .compact-input:focus { border-color: #06b6d4; background: rgba(0,0,0,0.8); }
         
-        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); } }
-        .btn-pulse { animation: pulse-ring 2s infinite; }
+        /* Modal Center Fix - The Magic */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal-box {
+            width: 100%; max-width: 360px; /* Small width */
+            max-height: 85vh; /* Max height */
+            display: flex; flex-direction: column; /* For internal scrolling */
+            border-radius: 16px;
+            animation: popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
-<body>
-    <div id="root"></div>
+<body class="antialiased pb-24">
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+    <div id="canvas-container"></div>
+    <div id="joinersList"></div>
+    <div id="toast-container"></div>
 
-        // --- CONFIG ---
-        const ADMIN_PIN = "8127205425mahi";
-        const UPI_ID = "9170744521@upi";
-
-        // --- SPLASH SCREEN ---
-        const Splash = ({ onFinish }) => {
-            useEffect(() => { setTimeout(onFinish, 2500); }, []);
-            return (
-                <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
-                    <div className="w-24 h-24 rounded-full border-4 border-cyan-500 flex items-center justify-center mb-4 btn-pulse relative">
-                        <span className="text-5xl font-teko font-bold italic text-white">S</span>
-                        <div className="absolute inset-0 rounded-full border-t-4 border-white animate-spin"></div>
-                    </div>
-                    <h1 className="text-3xl font-teko tracking-widest text-cyan-400">SUNIL ESPORTS</h1>
-                    <p className="text-xs text-gray-500 mt-2 tracking-[0.5em]">LOADING RESOURCES</p>
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 border-b border-cyan-500/20 bg-black/90 backdrop-blur-md">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="13339.jpg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/147/147144.png'" class="w-10 h-10 rounded-full border-2 border-cyan-400 object-cover shadow-[0_0_10px_#22d3ee]">
+                <div>
+                    <span class="text-xl font-bold tracking-widest text-white font-orbitron block leading-none">SUNIL <span class="text-yellow-400">LIVE</span></span>
+                    <span class="text-[9px] text-gray-400 tracking-[0.2em] block">ESPORTS</span>
                 </div>
-            );
-        };
+            </div>
+            <div class="flex gap-3 items-center">
+                <button onclick="toggleLanguage()" class="bg-gray-800 border border-gray-600 px-3 py-1 rounded text-xs text-gray-300 font-bold hover:text-white" id="langBtn">EN/HI</button>
+                <button onclick="openForm('Mega Entry')" class="btn-3d-cyan px-4 py-2 font-bold text-xs shadow-lg">JOIN WAR</button>
+            </div>
+        </div>
+    </nav>
 
-        // --- MATCH CARD ---
-        const MatchCard = ({ match, onJoin }) => (
-            <div className="bg-[#111] rounded-lg overflow-hidden mb-4 border border-gray-800 anim-slide shadow-lg">
-                <div className="relative h-32">
-                    <img src="https://images.hdqwalls.com/wallpapers/garena-free-fire-4k-2020-5s.jpg" className="w-full h-full object-cover opacity-60" />
-                    <div className="absolute top-2 left-2 bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded clip-path-slant">{match.type}</div>
-                    <div className="absolute bottom-2 right-2 bg-black/80 text-cyan-400 text-xs px-2 py-0.5 rounded font-mono border border-cyan-500/30">
-                        {match.joined}/{match.total} Left
+    <!-- Main Content -->
+    <main class="relative z-10 pt-24 container mx-auto px-4">
+        
+        <!-- Hero Section -->
+        <section class="mb-12">
+            <div class="glass-panel p-1 rounded-2xl max-w-4xl mx-auto shadow-[0_0_50px_rgba(6,182,212,0.1)]">
+                <div class="rounded-xl overflow-hidden shadow-lg border border-yellow-500/30 relative bg-black">
+                    <div class="video-container">
+                        <iframe src="https://www.youtube.com/embed/9iW-sL7Upt0?autoplay=1&mute=1&loop=1&playlist=9iW-sL7Upt0&controls=0&showinfo=0&rel=0&modestbranding=1" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        <div class="video-overlay"></div>
                     </div>
+                    <div class="absolute bottom-4 left-4 z-20"><span class="bg-red-600 text-white text-[10px] px-3 py-1 rounded font-bold shadow-lg flex items-center gap-2"><span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> LIVE</span></div>
                 </div>
-                <div className="p-3">
-                    <div className="flex justify-between items-start mb-2">
-                        <div>
-                            <h3 className="text-lg font-teko font-bold leading-none text-white">{match.title}</h3>
-                            <span className="text-[10px] text-gray-400 uppercase tracking-wide">{match.map} • {match.time}</span>
-                        </div>
-                        <div className="text-right">
-                            <span className="block text-[10px] text-gray-500">PRIZE POOL</span>
-                            <span className="text-yellow-400 font-bold text-lg leading-none">₹{match.prize}</span>
-                        </div>
-                    </div>
+            </div>
+        </section>
+
+        <!-- Tournament Details -->
+        <section id="rules" class="mb-16">
+            <div class="container mx-auto px-0 md:px-4 max-w-4xl">
+                <div class="glass-panel p-6 rounded-xl border border-yellow-500/30">
+                    <h2 class="text-2xl md:text-3xl font-bold text-white mb-6 text-center"><i class="fa-solid fa-scroll text-yellow-500 mr-2"></i> TOURNAMENT <span class="text-cyan-400">DETAILS</span></h2>
                     
-                    <div className="flex gap-2 mt-3">
-                        <div className="bg-[#1a1a1a] flex-1 py-1 px-2 rounded border border-gray-800 text-center">
-                            <span className="text-[10px] text-gray-500 block">ENTRY FEE</span>
-                            <span className="text-white font-bold">₹{match.fee}</span>
+                    <div class="bg-red-900/20 border-l-4 border-red-600 p-3 rounded mb-6 flex items-start gap-4 animate-pulse">
+                        <div class="bg-red-600/20 p-1 rounded-full border border-red-500/50 flex-shrink-0"><span class="font-black text-red-500 text-lg">18+</span></div>
+                        <div><h3 class="text-sm font-bold text-red-400 uppercase tracking-wider">Strictly 18+ Only</h3><p class="text-xs text-gray-300 mt-1">Is tournament mein hissa lene ke liye aapki umar 18 saal ya usse zyada honi chahiye.</p></div>
+                    </div>
+
+                    <div class="space-y-6 text-gray-300">
+                        <!-- Offline Rules with Trophy -->
+                        <div class="bg-black/20 p-6 rounded-lg border-l-4 border-yellow-500 relative overflow-hidden">
+                            <h3 class="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-2">🏆 <span id="dynOffTitle">OFFLINE LAN EVENT</span></h3>
+                            <div class="flex flex-col md:flex-row gap-6 items-start">
+                                <div class="flex-1 text-sm space-y-2">
+                                    <p><strong class="text-yellow-400">Info:</strong> <span id="dynOffInfo">Sabhi players ek jagah (LAN) par baith kar khelenge.</span></p>
+                                    <ul class="list-disc pl-5 space-y-2">
+                                        <li><strong class="text-yellow-400">Location:</strong> <span id="dynOffLoc">Vikash Mobile Shop, Bara Khas, Jasra</span></li>
+                                        <li><strong class="text-yellow-400">Date & Time:</strong> <span id="dynOffTime">10th December, 02:30 PM</span></li>
+                                        <li><strong class="text-yellow-400">Entry:</strong> <span id="dynOffEntry">₹50</span></li>
+                                        <li><strong class="text-yellow-400">Prize Pool:</strong>
+                                            <ul class="list-none pl-4 mt-2 text-sm space-y-2 bg-black/40 p-3 rounded border border-gray-700">
+                                                <li class="flex items-center gap-2"><i class="fa-solid fa-trophy text-yellow-400"></i> 1st: <span class="text-green-400 font-bold" id="dynOffP1">₹500 + TROPHY</span></li>
+                                                <li class="flex items-center gap-2"><i class="fa-solid fa-medal text-gray-300"></i> 2nd: <span class="text-green-400 font-bold" id="dynOffP2">₹400</span></li>
+                                                <li class="flex items-center gap-2"><i class="fa-solid fa-medal text-orange-400"></i> 3rd: <span class="text-green-400 font-bold" id="dynOffP3">₹250</span></li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="flex-shrink-0 flex items-center justify-center p-4">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/3112/3112946.png" class="w-28 h-28 object-contain animate-bounce drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]">
+                                </div>
+                            </div>
                         </div>
-                        <button 
-                            onClick={() => onJoin(match)}
-                            disabled={match.joined >= match.total}
-                            className={`flex-1 rounded font-bold text-sm tracking-wider ${match.joined >= match.total ? 'bg-gray-700 text-gray-400' : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-500/20'}`}
-                        >
-                            {match.joined >= match.total ? 'FULL' : 'JOIN NOW'}
-                        </button>
+
+                        <!-- Online Rules -->
+                        <div class="bg-black/20 p-6 rounded-lg border-l-4 border-cyan-500 relative overflow-hidden">
+                            <h3 class="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-2">🎮 ONLINE PLAYERS</h3>
+                            <div class="text-sm space-y-2">
+                                <p><strong class="text-cyan-400">Info:</strong> <span id="dynOnInfo">Jo players location par nahi aa sakte, wo ghar se Online join karein.</span></p>
+                                <ul class="list-disc pl-5 space-y-2">
+                                    <li><strong class="text-cyan-400">Prize Pool:</strong>
+                                        <ul class="list-none pl-4 mt-1 text-sm space-y-1">
+                                            <li>🥇 1st: <span class="text-green-400 font-bold" id="dynOnP1">₹500</span></li>
+                                            <li>🥈 2nd: <span class="text-green-400 font-bold" id="dynOnP2">₹250</span></li>
+                                            <li>🥉 3rd: <span class="text-green-400 font-bold" id="dynOnP3">₹150</span></li>
+                                        </ul>
+                                    </li>
+                                    <li><strong class="text-cyan-400">Process:</strong> Request bhejein, Admin verify karke ID/Pass dega.</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        );
+        </section>
 
-        // --- MAIN APP ---
-        const App = () => {
-            const [loading, setLoading] = useState(true);
-            const [view, setView] = useState('login'); // login, home, wallet, admin
-            const [activeTab, setActiveTab] = useState('matches'); // matches, results, profile
-            const [user, setUser] = useState(null);
-            const [balance, setBalance] = useState(0);
+        <!-- Dynamic Tournaments Section -->
+        <section id="tournaments" class="mb-16">
+            <div class="flex items-center gap-4 mb-8"><div class="h-0.5 flex-1 bg-gradient-to-r from-transparent to-cyan-600"></div><h2 class="text-2xl md:text-3xl font-bold text-white text-center font-orbitron tracking-wide">MATCH <span class="text-cyan-400">ZONES</span></h2><div class="h-0.5 flex-1 bg-gradient-to-l from-transparent to-cyan-600"></div></div>
             
-            // Admin Logic
-            const [tapCount, setTapCount] = useState(0);
-            
-            // Data
-            const [matches, setMatches] = useState([
-                { id: 1, title: "Solo Rush #402", map: "Bermuda", type: "SOLO", fee: 20, prize: 300, time: "04:00 PM", joined: 12, total: 48 },
-                { id: 2, title: "Squad War #99", map: "Purgatory", type: "SQUAD", fee: 80, prize: 1200, time: "06:00 PM", joined: 45, total: 48 },
-                { id: 3, title: "Duo Sniper Only", map: "Kalahari", type: "DUO", fee: 40, prize: 600, time: "08:00 PM", joined: 20, total: 48 },
-            ]);
+            <!-- 1. OFFLINE -->
+            <div class="mb-12">
+                <div class="flex items-center gap-2 mb-4 px-1">
+                    <div class="w-1 h-6 bg-yellow-500 rounded"></div>
+                    <h3 class="text-xl font-bold text-white">OFFLINE LAN <span class="text-gray-500 text-sm font-normal ml-2">(Bara, Jasra)</span></h3>
+                </div>
+                <div id="offline-container" class="flex md:grid md:grid-cols-3 gap-5 overflow-x-auto pb-6 px-2 no-scrollbar snap-x snap-mandatory"></div>
+            </div>
 
-            useEffect(() => {
-                const u = localStorage.getItem('app_user');
-                const b = localStorage.getItem('app_bal');
-                if(u) {
-                    setUser(JSON.parse(u));
-                    setBalance(b ? parseInt(b) : 0);
-                    setView('home');
-                }
-            }, []);
+            <!-- 2. ONLINE -->
+            <div class="mb-12">
+                <div class="flex items-center gap-2 mb-4 px-1">
+                    <div class="w-1 h-6 bg-cyan-500 rounded"></div>
+                    <h3 class="text-xl font-bold text-white">ONLINE MATCHES <span class="text-gray-500 text-sm font-normal ml-2">(Play from Home)</span></h3>
+                </div>
+                <div id="online-container" class="flex md:grid md:grid-cols-3 gap-5 overflow-x-auto pb-6 px-2 no-scrollbar snap-x snap-mandatory"></div>
+            </div>
 
-            const updateBalance = (amt) => {
-                const newBal = balance + amt;
-                setBalance(newBal);
-                localStorage.setItem('app_bal', newBal);
-            };
+            <!-- 3. CLASH SQUAD -->
+            <div class="mb-12">
+                <div class="flex items-center gap-2 mb-4 px-1">
+                    <div class="w-1 h-6 bg-purple-500 rounded"></div>
+                    <h3 class="text-xl font-bold text-white">CLASH SQUAD <span class="text-gray-500 text-sm font-normal ml-2">(4v4)</span></h3>
+                </div>
+                <div id="cs-container" class="flex md:grid md:grid-cols-3 gap-5 overflow-x-auto pb-6 px-2 no-scrollbar snap-x snap-mandatory"></div>
+            </div>
+        </section>
 
-            const handleLogin = (method, val) => {
-                const u = { name: "Gamer", uid: "SL" + Math.floor(10000 + Math.random() * 90000), phone: val || "Google" };
-                setUser(u);
-                localStorage.setItem('app_user', JSON.stringify(u));
-                setView('home');
-            };
-
-            const handleJoin = (m) => {
-                if(balance < m.fee) {
-                    alert("Low Balance! Please Add Money.");
-                    setView('wallet');
-                    return;
-                }
-                if(confirm(`Confirm join for ₹${m.fee}?`)) {
-                    updateBalance(-m.fee);
-                    alert("Joined Successfully! Room ID/Pass will be sent via WhatsApp.");
-                    window.open(`https://wa.me/919170744521?text=I joined Match ${m.id} (UID: ${user.uid})`, '_blank');
-                }
-            };
-
-            // Admin Access (6 Taps on Logo)
-            const handleLogoTap = () => {
-                setTapCount(p => p+1);
-                if(tapCount+1 === 6) {
-                    const pin = prompt("Admin PIN:");
-                    if(pin === ADMIN_PIN) setView('admin');
-                    else alert("Access Denied");
-                    setTapCount(0);
-                }
-                setTimeout(() => setTapCount(0), 1000);
-            };
-
-            if(loading) return <Splash onFinish={() => setLoading(false)} />;
-
-            // --- 1. LOGIN SCREEN ---
-            if(view === 'login') return (
-                <div className="h-full flex flex-col justify-center p-8 bg-[url('https://images.hdqwalls.com/wallpapers/garena-free-fire-4k-2020-5s.jpg')] bg-cover bg-center relative">
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
-                    <div className="relative z-10 text-center">
-                        <div className="w-24 h-24 bg-cyan-600 rounded-2xl mx-auto mb-6 flex items-center justify-center rotate-45 shadow-[0_0_30px_rgba(6,182,212,0.5)] border-4 border-black">
-                            <span className="text-5xl font-teko font-bold text-white -rotate-45">S</span>
+        <!-- Google Map Location Section -->
+        <section id="location" class="mb-16">
+            <h2 class="text-2xl md:text-3xl font-bold mb-8 text-center text-white font-orbitron tracking-widest border-b border-gray-800 pb-4">OUR <span class="text-cyan-400">BASE</span></h2>
+            <div class="container mx-auto px-0 md:px-4 max-w-4xl">
+                <div class="glass-panel p-2 rounded-xl border border-cyan-500/30 relative group">
+                    <div class="h-[250px] md:h-[350px] w-full rounded-lg overflow-hidden bg-gray-900/40 relative transform-style-3d">
+                        <iframe src="https://maps.google.com/maps?q=Vikash%20Mobile%20Shop%20ke%20Samne%20Bara%20Khas%20Jasra%20Prayagraj&t=&z=17&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        <div class="absolute bottom-4 left-4 bg-black/90 px-4 py-3 rounded-lg border-l-4 border-cyan-500 shadow-xl backdrop-blur-md">
+                            <h4 class="text-cyan-500 font-bold text-sm mb-1">SUNIL ESPORTS HQ</h4>
+                            <p class="text-[10px] text-gray-300 flex items-center gap-1"><i class="fa-solid fa-location-arrow"></i> Vikash Mobile Shop, Bara Khas, Jasra</p>
+                            <a href="https://www.google.com/maps/search/?api=1&query=Vikash+Mobile+Shop+ke+Samne+Bara+Khas+Jasra+Prayagraj" target="_blank" class="mt-2 inline-block bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-bold px-3 py-1.5 rounded no-underline shadow-lg">📍 OPEN MAP</a>
                         </div>
-                        <h1 className="text-4xl font-teko text-white font-bold leading-none mb-1">SUNIL LIVE <span className="text-cyan-400">ESPORTS</span></h1>
-                        <p className="text-gray-400 text-sm mb-10 tracking-wider">PLAY • COMPETE • EARN</p>
-
-                        <button onClick={() => handleLogin('google')} className="w-full bg-white text-black font-bold py-3.5 rounded-lg mb-3 flex items-center justify-center gap-3 shadow-lg active:scale-95 transition">
-                            <i className="fa-brands fa-google text-red-500"></i> Continue with Google
-                        </button>
-                        <button onClick={() => { const p = prompt("Phone Number:"); if(p) handleLogin('phone', p); }} className="w-full bg-slate-800 text-white border border-slate-600 font-bold py-3.5 rounded-lg flex items-center justify-center gap-3 active:scale-95 transition">
-                            <i className="fa-solid fa-phone"></i> Use Phone Number
-                        </button>
                     </div>
                 </div>
-            );
+            </div>
+        </section>
 
-            // --- 2. MAIN APP STRUCTURE ---
-            return (
-                <div id="app-root">
-                    {/* Top Bar */}
-                    <div className="h-16 glass-panel flex justify-between items-center px-4 z-20 relative">
-                        <div className="flex items-center gap-3" onClick={handleLogoTap}>
-                            <div className="w-8 h-8 bg-cyan-600 rounded flex items-center justify-center font-bold font-teko text-xl">S</div>
-                            <div>
-                                <h1 className="font-teko font-bold text-lg leading-none tracking-wide text-white">SUNIL <span className="text-cyan-400">LIVE</span></h1>
-                                <p className="text-[9px] text-gray-400 font-mono">ID: {user?.uid}</p>
-                            </div>
-                        </div>
-                        <div onClick={() => setView('wallet')} className="bg-slate-900 border border-yellow-600/30 px-3 py-1 rounded flex items-center gap-2 active:bg-slate-800 transition">
-                            <i className="fa-solid fa-wallet text-yellow-400 text-xs"></i>
-                            <span className="font-mono font-bold text-sm">₹{balance}</span>
-                        </div>
-                    </div>
+        <!-- Socials -->
+        <section class="mb-24">
+            <h2 class="text-xl font-bold text-center text-gray-400 mb-6 font-orbitron">JOIN COMMUNITY</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto px-2">
+                <a href="https://youtube.com/@sunillive01" target="_blank" class="bg-black/40 border border-gray-700 p-4 rounded-xl flex items-center justify-center gap-3 text-white hover:bg-red-900/20 hover:border-red-500 transition"><i class="fa-brands fa-youtube text-red-500 text-2xl"></i><span class="text-xs font-bold">YOUTUBE</span></a>
+                <a href="https://instagram.com/sunil_live_1" target="_blank" class="bg-black/40 border border-gray-700 p-4 rounded-xl flex items-center justify-center gap-3 text-white hover:bg-pink-900/20 hover:border-pink-500 transition"><i class="fa-brands fa-instagram text-pink-500 text-2xl"></i><span class="text-xs font-bold">INSTAGRAM</span></a>
+                <a href="https://facebook.com/sunillive01" target="_blank" class="bg-black/40 border border-gray-700 p-4 rounded-xl flex items-center justify-center gap-3 text-white hover:bg-blue-900/20 hover:border-blue-500 transition"><i class="fa-brands fa-facebook text-blue-500 text-2xl"></i><span class="text-xs font-bold">FACEBOOK</span></a>
+                <a href="https://whatsapp.com/channel/0029VabHNnF6mYPQ8IEHex0N" target="_blank" class="bg-black/40 border border-gray-700 p-4 rounded-xl flex items-center justify-center gap-3 text-white hover:bg-green-900/20 hover:border-green-500 transition"><i class="fa-brands fa-whatsapp text-green-500 text-2xl"></i><span class="text-xs font-bold">WHATSAPP</span></a>
+            </div>
+        </section>
+    </main>
 
-                    {/* Content Area */}
-                    <div className="content-area p-4">
-                        
-                        {/* ADMIN VIEW */}
-                        {view === 'admin' && (
-                            <div className="bg-slate-800 p-4 rounded-xl border border-red-500/30">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-red-500 font-teko text-2xl">ADMIN PANEL</h2>
-                                    <button onClick={() => setView('home')} className="text-gray-400"><i className="fa-solid fa-times"></i></button>
-                                </div>
-                                <input id="newTitle" className="w-full bg-black p-2 rounded text-white mb-2" placeholder="Match Title" />
-                                <div className="flex gap-2 mb-2">
-                                    <input id="newFee" type="number" className="w-full bg-black p-2 rounded text-white" placeholder="Fee" />
-                                    <input id="newPrize" type="number" className="w-full bg-black p-2 rounded text-white" placeholder="Prize" />
-                                </div>
-                                <button onClick={() => {
-                                    const t = document.getElementById('newTitle').value;
-                                    const f = document.getElementById('newFee').value;
-                                    const p = document.getElementById('newPrize').value;
-                                    if(t && f && p) {
-                                        setMatches([...matches, { id: Date.now(), title: t, map: "Random", type: "SOLO", fee: parseInt(f), prize: parseInt(p), time: "TBA", joined: 0, total: 48 }]);
-                                        alert("Match Added!");
-                                    }
-                                }} className="w-full bg-blue-600 py-2 rounded font-bold">ADD MATCH</button>
-                                <button onClick={() => { localStorage.clear(); window.location.reload(); }} className="w-full bg-red-900/50 text-red-200 py-2 rounded font-bold mt-4">RESET APP</button>
-                            </div>
-                        )}
+    <!-- Footer -->
+    <footer class="bg-black border-t border-gray-800 text-center py-10 relative z-10">
+        <p class="text-2xl font-bold text-white font-orbitron mb-2">SUNIL LIVE ESPORTS</p>
+        <p class="text-gray-500 text-xs mt-2 select-none">
+            <span onclick="handleAdminTap()" class="cursor-pointer hover:text-white transition px-2 py-2">&copy; 2024 Sunil Live.</span> 
+            <span onclick="openStaffLogin()" class="cursor-pointer hover:text-white transition px-2 py-2">All Rights Reserved.</span>
+        </p>
+    </footer>
 
-                        {/* WALLET VIEW */}
-                        {view === 'wallet' && (
-                            <div className="anim-slide">
-                                <div className="bg-gradient-to-br from-slate-800 to-black p-6 rounded-2xl border border-yellow-500/20 text-center mb-6 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-full blur-xl"></div>
-                                    <p className="text-gray-400 text-xs font-bold tracking-widest uppercase">Available Balance</p>
-                                    <h1 className="text-5xl font-teko font-bold text-white mt-1">₹{balance}</h1>
-                                </div>
+    <!-- BOTTOM NAV -->
+    <div class="fixed bottom-0 w-full bg-black/95 border-t border-gray-800 pb-3 pt-2 px-6 flex justify-between z-50 backdrop-blur-lg">
+        <button onclick="window.scrollTo(0,0)" class="flex flex-col items-center gap-1 text-cyan-400">
+            <i class="fa-solid fa-gamepad text-xl"></i>
+            <span class="text-[10px] font-bold">PLAY</span>
+        </button>
+        <button onclick="openProfile()" class="flex flex-col items-center gap-1 text-purple-400">
+            <i class="fa-solid fa-user-astronaut text-xl"></i>
+            <span class="text-[10px] font-bold">PROFILE</span>
+        </button>
+        <button onclick="openMyRooms()" class="flex flex-col items-center gap-1 text-yellow-400 relative">
+            <div class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+            <i class="fa-solid fa-key text-xl"></i>
+            <span class="text-[10px] font-bold">MY ROOM</span>
+        </button>
+    </div>
 
-                                <div className="bg-[#111] p-4 rounded-xl border border-gray-800 mb-4">
-                                    <h3 className="font-bold text-cyan-400 mb-3 text-sm uppercase tracking-wide">Add Money (QR)</h3>
-                                    <div className="bg-white p-2 rounded-lg w-40 h-40 mx-auto mb-4">
-                                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=${UPI_ID}&pn=SunilEsports&cu=INR`} className="w-full h-full" />
-                                    </div>
-                                    <p className="text-center text-xs text-gray-500 mb-4">Scan using Any UPI App</p>
-                                    <button onClick={() => {
-                                        const amt = prompt("Enter Amount Paid:");
-                                        const utr = prompt("Enter UTR:");
-                                        if(amt && utr) {
-                                            updateBalance(parseInt(amt));
-                                            alert(`₹${amt} Added via UTR: ${utr}`);
-                                        }
-                                    }} className="w-full bg-green-600 py-3 rounded-lg font-bold text-sm">I HAVE PAID (VERIFY)</button>
-                                </div>
-                                <button onClick={() => setView('home')} className="w-full py-3 text-gray-500 text-sm">Go Back</button>
-                            </div>
-                        )}
+    <!-- MODALS START HERE -->
+    
+    <!-- 1. MY ROOMS MODAL -->
+    <div id="myRoomsModal" class="hidden modal-overlay">
+        <div class="glass-panel modal-box"> <!-- Auto Height Compact Box -->
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                <h3 class="text-lg font-bold text-yellow-400 font-orbitron flex items-center gap-2"><i class="fa-solid fa-lock"></i> MY LOBBY</h3>
+                <button onclick="document.getElementById('myRoomsModal').classList.add('hidden')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="myJoinedList" class="space-y-3 overflow-y-auto max-h-[60vh] pr-1">
+                <!-- Joined Matches will appear here -->
+            </div>
+        </div>
+    </div>
 
-                        {/* HOME VIEW */}
-                        {view === 'home' && (
-                            <>
-                                {/* Hero Slider */}
-                                <div className="relative h-48 rounded-xl overflow-hidden mb-6 border border-cyan-500/30 shadow-lg">
-                                    <img src="https://wallpapers.com/images/featured/free-fire-4k-i977r14138092421.jpg" className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent flex flex-col justify-end p-4">
-                                        <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded w-fit mb-1">LIVE</span>
-                                        <h2 className="text-2xl font-teko font-bold leading-none text-white">BATTLE FOR GLORY</h2>
-                                        <p className="text-xs text-gray-300">Join daily tournaments & win real cash.</p>
-                                    </div>
-                                </div>
-
-                                {/* Tabs */}
-                                <div className="flex bg-[#111] p-1 rounded-lg mb-4">
-                                    {['matches', 'results'].map(tab => (
-                                        <button 
-                                            key={tab}
-                                            onClick={() => setActiveTab(tab)}
-                                            className={`flex-1 py-2 text-xs font-bold uppercase rounded tracking-wider ${activeTab===tab ? 'bg-slate-800 text-white shadow' : 'text-gray-500'}`}
-                                        >
-                                            {tab}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {/* List */}
-                                <div className="pb-4">
-                                    {matches.map(m => (
-                                        <MatchCard key={m.id} match={m} onJoin={handleJoin} />
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    {/* BOTTOM NAV */}
-                    {view !== 'login' && (
-                        <div className="glass-panel h-16 fixed bottom-0 left-0 w-full flex justify-around items-center z-40 px-2 pb-2">
-                            <button onClick={() => setView('home')} className={`flex flex-col items-center gap-1 p-2 ${view==='home'?'text-cyan-400':'text-gray-500'}`}>
-                                <i className="fa-solid fa-gamepad text-xl"></i>
-                                <span className="text-[10px] font-bold">PLAY</span>
-                            </button>
-                            <button onClick={() => setView('wallet')} className={`flex flex-col items-center gap-1 p-2 ${view==='wallet'?'text-cyan-400':'text-gray-500'}`}>
-                                <i className="fa-solid fa-wallet text-xl"></i>
-                                <span className="text-[10px] font-bold">WALLET</span>
-                            </button>
-                            <button onClick={() => window.open('https://wa.me/919170744521', '_blank')} className="flex flex-col items-center gap-1 p-2 text-gray-500">
-                                <i className="fa-brands fa-whatsapp text-xl"></i>
-                                <span className="text-[10px] font-bold">HELP</span>
-                            </button>
-                            <button onClick={() => { localStorage.clear(); window.location.reload(); }} className="flex flex-col items-center gap-1 p-2 text-gray-500">
-                                <i className="fa-solid fa-user text-xl"></i>
-                                <span className="text-[10px] font-bold">LOGOUT</span>
-                            </button>
-                        </div>
-                    )}
+    <!-- 2. COMPACT REGISTER MODAL -->
+    <div id="regModal" class="hidden modal-overlay">
+        <div class="glass-panel modal-box">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="text-lg font-black text-white italic">JOIN MATCH</h3>
+                    <p id="modalGameName" class="text-xs text-cyan-400 font-bold uppercase">MATCH NAME</p>
                 </div>
-            );
-        };
+                <button onclick="closeForm()" class="text-gray-400 hover:text-white bg-gray-800 rounded-full w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <!-- Video Toggle Button -->
+            <button onclick="toggleVideo()" class="w-full bg-black/40 border border-gray-700 text-gray-300 text-xs py-2 rounded mb-4 hover:bg-black/60 transition flex items-center justify-center gap-2">
+                <i class="fa-brands fa-youtube text-red-500"></i> <span id="vidBtnText">Watch Joining Guide</span>
+            </button>
+            
+            <div id="guideVideo" class="hidden mb-4 rounded overflow-hidden border border-gray-700">
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/z3Zb1HoiZkA?rel=0&modestbranding=1" allowfullscreen></iframe>
+                </div>
+            </div>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+            <form onsubmit="event.preventDefault(); submitJoinRequest();" class="space-y-3">
+                <input type="hidden" id="joinMatchId">
+                <div id="formStatus" class="p-2 bg-red-900/40 text-red-400 text-xs font-bold rounded hidden border border-red-500"></div>
+                
+                <input id="playerName" class="compact-input" placeholder="Your Name" required>
+                <div class="grid grid-cols-2 gap-2">
+                    <input id="playerIGN" class="compact-input" placeholder="FF IGN" required>
+                    <input id="playerUID" class="compact-input" placeholder="FF UID" type="number" required>
+                </div>
+                <input id="playerWA" class="compact-input" placeholder="WhatsApp No." type="number" required>
+                
+                <!-- Compact Payment -->
+                <div class="bg-gray-900/60 p-3 rounded-lg border border-gray-700 flex items-center gap-3">
+                    <div class="bg-white p-1 rounded w-12 h-12 flex-shrink-0"><img src="13208.jpg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3596/3596091.png'" class="w-full h-full object-contain"></div>
+                    <div class="flex-1">
+                        <div class="flex justify-between text-xs text-gray-400 font-bold mb-1"><span>FEE: <span class="text-white">₹<span id="modalFee">0</span></span></span><span class="text-[10px]">SCAN & PAY</span></div>
+                        <input id="txnID" class="compact-input py-1 text-xs font-mono text-green-400 placeholder-gray-600" placeholder="Enter 12 Digit UTR" required>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 mt-2" onclick="document.getElementById('ageConsent').click()">
+                    <input type="checkbox" id="ageConsent" class="accent-cyan-500 w-4 h-4 cursor-pointer" required onclick="event.stopPropagation()">
+                    <label for="ageConsent" class="text-[10px] text-gray-400 cursor-pointer select-none">Confirm 18+ Age.</label>
+                </div>
+                <button type="submit" id="submitBtn" class="w-full btn-3d-cyan py-3 font-black text-sm rounded tracking-widest">SEND REQUEST <i class="fa-solid fa-paper-plane ml-1"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. PROFILE MODAL -->
+    <div id="profileModal" class="hidden modal-overlay">
+        <div class="glass-panel modal-box"> <!-- Auto Height -->
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                <h3 class="text-lg font-bold text-purple-400 font-orbitron flex items-center gap-2"><i class="fa-solid fa-user-astronaut"></i> MY PROFILE</h3>
+                <button onclick="document.getElementById('profileModal').classList.add('hidden')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-gray-800 rounded-full mx-auto mb-2 flex items-center justify-center text-2xl border-2 border-purple-500">😎</div>
+                <h2 class="text-lg font-bold text-white" id="profName">Guest</h2>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-gray-800 p-2 rounded text-center border border-gray-700">
+                    <p class="text-[10px] text-gray-400 uppercase">Matches</p>
+                    <p class="text-xl font-bold text-white" id="profCount">0</p>
+                </div>
+                <div class="bg-gray-800 p-2 rounded text-center border border-gray-700">
+                    <p class="text-[10px] text-gray-400 uppercase">Spent</p>
+                    <p class="text-xl font-bold text-yellow-400" id="profSpent">₹0</p>
+                </div>
+            </div>
+
+            <h4 class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">Recent History</h4>
+            <div id="historyList" class="space-y-2 overflow-y-auto max-h-40 pr-1"></div>
+        </div>
+    </div>
+
+    <!-- ADMIN LOGIN MODAL -->
+    <div id="authModal" class="hidden modal-overlay">
+        <div class="glass-panel modal-box text-center">
+            <h3 class="text-lg font-bold text-white mb-4 font-orbitron">SECURE ACCESS</h3>
+            <input type="password" id="authPin" class="compact-input text-center tracking-[5px] mb-4 text-lg" placeholder="****">
+            <button onclick="verifyAccess()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 rounded transition">LOGIN</button>
+            <button onclick="document.getElementById('authModal').classList.add('hidden')" class="mt-4 text-gray-500 text-xs underline">Close</button>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="adminModal" class="hidden fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel p-4 rounded-2xl w-full max-w-2xl border border-red-500/50 my-10 relative">
+            <button onclick="document.getElementById('adminModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h3 class="text-xl font-bold text-red-500 font-orbitron mb-6 border-b border-gray-700 pb-2" id="dashboardTitle">DASHBOARD</h3>
+            
+            <div class="flex gap-2 mb-4 bg-gray-800 p-1 rounded-lg">
+                <button onclick="switchAdminTab('matches')" id="tab-matches" class="flex-1 py-2 text-xs font-bold rounded bg-cyan-600 text-white">MATCHES</button>
+                <button onclick="switchAdminTab('requests')" id="tab-requests" class="flex-1 py-2 text-xs font-bold rounded text-gray-400 hover:bg-gray-700">REQUESTS <span id="reqCount" class="bg-red-600 text-white px-1.5 rounded-full ml-1">0</span></button>
+            </div>
+
+            <!-- TAB 1: MATCHES -->
+            <div id="view-matches" class="space-y-6">
+                <!-- Live Video -->
+                <div class="bg-gray-800/80 p-3 rounded-lg border border-gray-700">
+                    <p class="text-[10px] text-gray-300 font-bold uppercase mb-1">LIVE VIDEO LINK</p>
+                    <div class="flex gap-2">
+                        <input id="liveVidLink" class="compact-input flex-1" placeholder="YouTube Link">
+                        <button onclick="updateLiveVideo()" class="bg-red-600 text-white px-3 rounded text-xs font-bold">SET</button>
+                    </div>
+                </div>
+                <!-- Details -->
+                <div class="bg-gray-800/80 p-3 rounded-lg border border-gray-700">
+                    <p class="text-[10px] text-gray-300 font-bold uppercase mb-1">TOURNAMENT DETAILS</p>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <input id="detOffLoc" class="compact-input" placeholder="Location">
+                        <input id="detOffDate" class="compact-input" placeholder="Date">
+                    </div>
+                    <button onclick="updateDetails()" class="w-full bg-yellow-600 text-black px-3 py-2 rounded text-xs font-bold">UPDATE INFO</button>
+                </div>
+                <!-- Slots -->
+                <div class="bg-gray-800/80 p-3 rounded-lg border border-gray-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-xs text-gray-300 font-bold uppercase">Slots</p>
+                        <button onclick="resetMatches()" class="text-[9px] text-red-400 underline">Reset</button>
+                    </div>
+                    <div id="adminMatchList" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <!-- TAB 2: REQUESTS -->
+            <div id="view-requests" class="hidden space-y-4">
+                <div id="requestList" class="space-y-2 max-h-96 overflow-y-auto"></div>
+            </div>
+
+            <!-- Editor -->
+            <div id="matchEditor" class="hidden absolute inset-0 bg-gray-900 p-5 z-20 rounded-xl">
+                <button onclick="document.getElementById('matchEditor').classList.add('hidden')" class="absolute top-3 right-3 text-gray-500"><i class="fa-solid fa-xmark"></i></button>
+                <h4 class="text-white font-bold text-sm mb-4 border-b border-gray-700 pb-2">EDIT SLOT</h4>
+                <input type="hidden" id="editMatchId">
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <input id="editTitle" class="compact-input" placeholder="Title">
+                    <select id="editTag" class="compact-input">
+                        <option value="OPEN">OPEN</option>
+                        <option value="SOON">SOON</option>
+                        <option value="FULL">FULL</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <input id="editFee" type="number" class="compact-input" placeholder="Fee">
+                    <input id="editJoined" type="number" class="compact-input" placeholder="Joined">
+                    <input id="editTotal" type="number" class="compact-input" value="48">
+                </div>
+                <div class="bg-blue-900/10 p-3 rounded border border-blue-500/30 mb-4">
+                    <p class="text-[10px] text-blue-400 font-bold mb-2">CREDENTIALS</p>
+                    <div class="flex gap-2">
+                        <input id="editRoomId" class="compact-input" placeholder="Room ID">
+                        <input id="editRoomPass" class="compact-input" placeholder="Pass">
+                    </div>
+                </div>
+                <button onclick="saveMatchChanges()" class="w-full bg-green-600 text-white text-xs font-bold py-3 rounded">SAVE CHANGES</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        const scriptURL = "https://script.google.com/macros/s/AKfycbyRwEzvkMGvJ2SwiJ7JIs-OoX1rMBFCqZkUHFdm2oebVeJPAVcxPUZzRY-_mHH8nWWRkA/exec"; 
+        const ADMIN_PIN = "8127205425SUNIL"; 
+        const STAFF_PIN = "1259SUNIL";
+
+        // --- DATA MANAGEMENT ---
+        function getDefaultMatches() {
+            return [
+                { id: 'off_solo', category: 'offline', title: 'Offline Solo King', subtitle: 'LAN Event', tag: 'OPEN', fee: 50, joined: 12, total: 48, roomId: '', roomPass: '', prizes: ['₹500', '₹400', '₹250'] },
+                { id: 'off_duo', category: 'offline', title: 'Offline Duo', subtitle: 'LAN Event', tag: 'SOON', fee: 0, joined: 0, total: 48, roomId: '', roomPass: '', prizes: ['TBA', 'TBA', 'TBA'] },
+                { id: 'off_squad', category: 'offline', title: 'Offline Squad', subtitle: 'LAN Event', tag: 'SOON', fee: 0, joined: 0, total: 12, roomId: '', roomPass: '', prizes: ['TBA', 'TBA', 'TBA'] },
+                { id: 'on_solo', category: 'online', title: 'Online Solo Rush', subtitle: 'Play Home', tag: 'OPEN', fee: 50, joined: 34, total: 48, roomId: '', roomPass: '', prizes: ['₹500', '₹250', '₹150'] },
+                { id: 'on_duo', category: 'online', title: 'Online Duo', subtitle: 'Play Home', tag: 'SOON', fee: 0, joined: 0, total: 48, roomId: '', roomPass: '', prizes: ['TBA', 'TBA', 'TBA'] },
+                { id: 'on_squad', category: 'online', title: 'Online Squad', subtitle: 'Play Home', tag: 'SOON', fee: 0, joined: 0, total: 12, roomId: '', roomPass: '', prizes: ['TBA', 'TBA', 'TBA'] },
+                { id: 'cs_rank', category: 'cs', title: 'CS Rank 4v4', subtitle: 'Clash Squad', tag: 'SOON', fee: 0, joined: 0, total: 2, roomId: '', roomPass: '', prizes: ['TBA'] }
+            ];
+        }
+
+        let allMatches = JSON.parse(localStorage.getItem('allMatchesData')) || getDefaultMatches();
+        let myJoinedMatches = JSON.parse(localStorage.getItem('myJoinedMatches')) || [];
+        let joinRequests = JSON.parse(localStorage.getItem('joinRequests')) || [];
+        let userHistory = JSON.parse(localStorage.getItem('userHistory')) || []; 
+
+        if(allMatches.length < 7) { allMatches = getDefaultMatches(); localStorage.setItem('allMatchesData', JSON.stringify(allMatches)); }
+
+        function saveMatches() { localStorage.setItem('allMatchesData', JSON.stringify(allMatches)); renderMatches(); }
+        function saveRequests() { localStorage.setItem('joinRequests', JSON.stringify(joinRequests)); updateReqCount(); }
+        function resetMatches() { if(confirm("Reset all?")) { allMatches = getDefaultMatches(); saveMatches(); adminRenderMatchList(); } }
+
+        // --- RENDER LOGIC ---
+        function renderMatches() {
+            const containers = { offline: document.getElementById('offline-container'), online: document.getElementById('online-container'), cs: document.getElementById('cs-container') };
+            Object.values(containers).forEach(c => c.innerHTML = '');
+            allMatches.forEach(m => { if(containers[m.category]) containers[m.category].innerHTML += createMatchCard(m); });
+        }
+
+        function createMatchCard(m) {
+            const isOpen = m.tag === 'OPEN';
+            const isFull = m.joined >= m.total || m.tag === 'FULL';
+            const badgeColor = isOpen ? 'bg-green-600 text-white' : (m.tag === 'FULL' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300');
+            const btnState = (isOpen && !isFull) ? `onclick="openForm('${m.id}')"` : 'disabled';
+            const btnText = isFull ? 'FULL' : (isOpen ? 'JOIN NOW' : 'COMING SOON');
+            const btnClass = (isOpen && !isFull) ? 'btn-3d-cyan' : 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700';
+            const opacityClass = (isOpen && !isFull) ? '' : 'opacity-80 grayscale-[0.5]';
+            const percent = Math.min((m.joined / m.total) * 100, 100);
+            
+            let img = "https://image.pollinations.ai/prompt/Free%20Fire%20Battleground%20Realistic%20Wallpaper?width=400&height=300&nologo=true";
+            if(m.category === 'offline') img = "https://image.pollinations.ai/prompt/Esports%20LAN%20Event%20Stage%20Gaming%20Tournament?width=400&height=300&nologo=true";
+            if(m.category === 'cs') img = "https://image.pollinations.ai/prompt/Free%20Fire%20Clash%20Squad%20Versus%20Mode?width=400&height=300&nologo=true";
+
+            let prizeHTML = '';
+            if (m.prizes && m.prizes.length > 0) {
+               prizeHTML = `<div class="bg-black/30 p-2 rounded mb-2 border border-gray-700 space-y-1">
+                   ${m.prizes[0] ? `<div class="flex justify-between text-[10px] text-gray-300"><span>1st</span><span class="text-yellow-400 font-bold">${m.prizes[0]}</span></div>` : ''}
+                   ${m.prizes[1] ? `<div class="flex justify-between text-[10px] text-gray-300"><span>2nd</span><span class="text-gray-200 font-bold">${m.prizes[1]}</span></div>` : ''}
+                   ${m.prizes[2] ? `<div class="flex justify-between text-[10px] text-gray-300"><span>3rd</span><span class="text-gray-400 font-bold">${m.prizes[2]}</span></div>` : ''}
+               </div>`;
+            }
+
+            const entryDisplay = (m.tag === 'SOON') ? 'TBA' : `₹${m.fee}`;
+
+            return `
+            <div class="flex-shrink-0 w-72 snap-center slot-card group ${opacityClass}">
+                <div class="slot-img-wrap"><img src="${img}" class="slot-img"><div class="slot-badge ${badgeColor}">${m.tag}</div><div class="absolute bottom-0 left-0 w-full h-10 bg-gradient-to-t from-black to-transparent"></div></div>
+                <div class="p-3 bg-[#111]">
+                    <div class="flex justify-between items-start mb-1"><div><h3 class="text-base font-bold text-white truncate w-40 font-orbitron">${m.title}</h3><p class="text-[10px] text-gray-400">${m.subtitle}</p></div></div>
+                    <div class="flex justify-between text-[10px] text-gray-300 mt-2 mb-1"><span>Players</span><span>${m.joined}/${m.total}</span></div>
+                    <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden mb-3"><div class="bg-cyan-500 h-full progress-bar" style="width: ${percent}%"></div></div>
+                    ${prizeHTML}
+                    <div class="flex justify-between items-center gap-3">
+                        <div class="bg-gray-800 px-3 py-1.5 rounded border border-gray-700 text-center min-w-[60px]"><span class="block text-[9px] text-gray-500">ENTRY</span><span class="text-white font-bold text-sm">${entryDisplay}</span></div>
+                        <button ${btnState} class="flex-1 py-2 font-black text-xs rounded uppercase tracking-wider ${btnClass}">${btnText}</button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // --- JOIN REQUEST SYSTEM ---
+        function toggleVideo() {
+            const vid = document.getElementById('guideVideo');
+            const btn = document.getElementById('vidBtnText');
+            if(vid.classList.contains('hidden')) {
+                vid.classList.remove('hidden');
+                btn.innerText = "Hide Guide";
+            } else {
+                vid.classList.add('hidden');
+                btn.innerText = "Watch Joining Guide";
+            }
+        }
+
+        function openForm(matchId) {
+            const m = allMatches.find(x => x.id === matchId);
+            if(!m) return;
+            document.getElementById('joinMatchId').value = matchId;
+            document.getElementById('modalGameName').innerText = m.title;
+            document.getElementById('modalFee').innerText = m.fee;
+            // Scroll to top of modal for compact view
+            document.querySelector('#regModal .modal-box').scrollTop = 0;
+            document.getElementById('regModal').classList.remove('hidden');
+        }
+        function closeForm() { document.getElementById('regModal').classList.add('hidden'); }
+
+        function submitJoinRequest() {
+            const matchId = document.getElementById('joinMatchId').value;
+            const txn = document.getElementById('txnID').value;
+            const age = document.getElementById('ageConsent').checked;
+            const statusBox = document.getElementById('formStatus');
+            const btn = document.getElementById('submitBtn');
+            const pName = document.getElementById('playerName').value;
+
+            if(!age) { statusBox.innerText = "18+ Required."; statusBox.classList.remove('hidden'); return; }
+            if(!/^\d{12}$/.test(txn)) { statusBox.innerText = "Invalid UTR (12 Digits only)."; statusBox.classList.remove('hidden'); return; }
+
+            statusBox.classList.add('hidden');
+            btn.innerHTML = "Sending..."; btn.disabled = true;
+
+            const m = allMatches.find(x => x.id === matchId);
+            
+            const newReq = {
+                id: Date.now(),
+                matchId: matchId,
+                matchName: document.getElementById('modalGameName').innerText,
+                name: pName,
+                ign: document.getElementById('playerIGN').value,
+                uid: document.getElementById('playerUID').value,
+                wa: document.getElementById('playerWA').value,
+                txn: txn,
+                status: 'pending'
+            };
+
+            joinRequests.unshift(newReq);
+            saveRequests();
+
+            const feePaid = m ? m.fee : 0;
+            const histItem = {
+                title: newReq.matchName,
+                fee: feePaid,
+                date: new Date().toLocaleDateString(),
+                status: 'Pending'
+            };
+            userHistory.unshift(histItem);
+            localStorage.setItem('userHistory', JSON.stringify(userHistory));
+            localStorage.setItem('userName', pName);
+
+            setTimeout(() => {
+                closeForm();
+                btn.innerHTML = "SEND REQUEST"; btn.disabled = false;
+                Swal.fire({ title: 'Request Sent!', text: 'Admin will verify and approve your slot.', icon: 'success', background: '#111', color: '#fff', confirmButtonColor: '#06b6d4' });
+            }, 1000);
+        }
+
+        // --- MY ROOMS ---
+        function openMyRooms() {
+            const container = document.getElementById('myJoinedList');
+            container.innerHTML = '';
+            
+            const approved = joinRequests.filter(r => r.status === 'approved');
+            
+            if(approved.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 mt-10"><i class="fa-regular fa-folder-open text-4xl mb-4 opacity-50"></i><p>No joined matches yet.</p></div>';
+            } else {
+                approved.forEach(req => {
+                    const m = allMatches.find(x => x.id === req.matchId);
+                    if(m) {
+                        const hasCreds = m.roomId && m.roomId.length > 2;
+                        container.innerHTML += `
+                        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-4">
+                            <div class="flex justify-between mb-3 border-b border-gray-700 pb-2"><h4 class="text-white font-bold text-sm">${m.title}</h4><span class="bg-green-900/50 text-green-300 text-[10px] px-2 py-0.5 rounded">APPROVED</span></div>
+                            <div class="bg-black/40 p-3 rounded border border-dashed ${hasCreds ? 'border-green-500/50' : 'border-gray-600'}">
+                                ${hasCreds ? `<div class="text-center"><div><p class="text-[9px] text-gray-500">ROOM ID</p><p class="text-lg font-mono text-white select-all">${m.roomId}</p></div><div class="mt-2"><p class="text-[9px] text-gray-500">PASSWORD</p><p class="text-lg font-mono text-yellow-400 select-all">${m.roomPass}</p></div></div>` : `<div class="text-center py-2"><p class="text-xs text-gray-400">Waiting for ID...</p></div>`}
+                            </div>
+                        </div>`;
+                    }
+                });
+            }
+            document.getElementById('myRoomsModal').classList.remove('hidden');
+        }
+        
+        // --- PROFILE SYSTEM ---
+        function openProfile() {
+            const history = JSON.parse(localStorage.getItem('userHistory')) || [];
+            const name = localStorage.getItem('userName') || "Guest";
+            const spent = history.reduce((sum, item) => sum + (item.fee || 0), 0);
+            
+            document.getElementById('profName').innerText = name;
+            document.getElementById('profCount').innerText = history.length;
+            document.getElementById('profSpent').innerText = '₹' + spent;
+            
+            const list = document.getElementById('historyList');
+            list.innerHTML = history.length ? history.map(h => `
+                <div class="flex justify-between items-center bg-gray-800 p-2 rounded border border-gray-700 text-xs">
+                    <div>
+                        <p class="text-white font-bold">${h.title}</p>
+                        <p class="text-[9px] text-gray-400">${h.date}</p>
+                    </div>
+                    <span class="text-yellow-400 font-bold">-₹${h.fee}</span>
+                </div>
+            `).join('') : '<p class="text-center text-gray-500 text-xs mt-4">No match history.</p>';
+            
+            document.getElementById('profileModal').classList.remove('hidden');
+        }
+
+        // --- ADMIN SYSTEM ---
+        let tapCount = 0, tapTimer;
+        function handleAdminTap() { clearTimeout(tapTimer); tapCount++; if (tapCount === 5) { tapCount = 0; document.getElementById('authModal').classList.remove('hidden'); } tapTimer = setTimeout(() => { tapCount = 0; }, 2000); }
+        function openStaffLogin() { document.getElementById('authModal').classList.remove('hidden'); }
+        function verifyAccess() {
+            const pin = document.getElementById('authPin').value;
+            if (pin === ADMIN_PIN || pin === STAFF_PIN) {
+                document.getElementById('authModal').classList.add('hidden');
+                document.getElementById('adminModal').classList.remove('hidden');
+                renderAdminList(); renderRequests(); loadDynamicDetails();
+            } else { alert("Wrong PIN"); }
+        }
+
+        // Admin Tabs
+        function switchAdminTab(tab) {
+            document.getElementById('view-matches').classList.add('hidden');
+            document.getElementById('view-requests').classList.add('hidden');
+            document.getElementById(`tab-matches`).className = "flex-1 py-2 text-xs font-bold rounded text-gray-400 hover:bg-gray-700";
+            document.getElementById(`tab-requests`).className = "flex-1 py-2 text-xs font-bold rounded text-gray-400 hover:bg-gray-700";
+            
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).className = "flex-1 py-2 text-xs font-bold rounded bg-cyan-600 text-white";
+        }
+
+        function renderAdminList() {
+            const list = document.getElementById('adminMatchList');
+            list.innerHTML = allMatches.map(m => `
+                <div class="flex justify-between items-center bg-black/40 p-2 rounded border border-gray-700 hover:bg-gray-800">
+                    <div><p class="text-xs font-bold text-white">${m.title}</p><p class="text-[9px] ${m.tag==='OPEN'?'text-green-400':'text-gray-500'}">${m.tag}</p></div>
+                    <button onclick="editMatch('${m.id}')" class="bg-blue-600 px-3 py-1 rounded text-[10px] text-white font-bold">EDIT</button>
+                </div>`).join('');
+        }
+
+        function renderRequests() {
+            const list = document.getElementById('requestList');
+            const pending = joinRequests.filter(r => r.status === 'pending');
+            list.innerHTML = pending.length ? pending.map(r => `
+                <div class="bg-gray-800 p-3 rounded border border-gray-600">
+                    <p class="text-xs font-bold text-white">${r.matchName}</p>
+                    <p class="text-[10px] text-gray-400">Name: ${r.name} | UID: ${r.uid}</p>
+                    <p class="text-[10px] text-yellow-400 font-mono bg-black/30 p-1 rounded mt-1">UTR: ${r.txn}</p>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="processReq(${r.id}, 'approved')" class="flex-1 bg-green-600 text-white text-[10px] font-bold py-1 rounded">APPROVE</button>
+                        <button onclick="processReq(${r.id}, 'rejected')" class="flex-1 bg-red-600 text-white text-[10px] font-bold py-1 rounded">REJECT</button>
+                    </div>
+                </div>`).join('') : '<p class="text-center text-gray-500 text-xs">No pending requests.</p>';
+            updateReqCount();
+        }
+
+        function updateReqCount() {
+            document.getElementById('reqCount').innerText = joinRequests.filter(r => r.status === 'pending').length;
+        }
+
+        function processReq(id, status) {
+            const req = joinRequests.find(r => r.id === id);
+            if(req) {
+                req.status = status;
+                if(status === 'approved') {
+                    const m = allMatches.find(x => x.id === req.matchId);
+                    if(m) m.joined++;
+                    saveMatches();
+                }
+                saveRequests();
+                renderRequests();
+            }
+        }
+
+        function editMatch(id) {
+            const m = allMatches.find(x => x.id === id);
+            if(!m) return;
+            document.getElementById('editMatchId').value = m.id;
+            document.getElementById('editTitle').value = m.title;
+            document.getElementById('editTag').value = m.tag;
+            document.getElementById('editFee').value = m.fee;
+            document.getElementById('editJoined').value = m.joined;
+            document.getElementById('editTotal').value = m.total;
+            document.getElementById('editRoomId').value = m.roomId || "";
+            document.getElementById('editRoomPass').value = m.roomPass || "";
+            document.getElementById('matchEditor').classList.remove('hidden');
+        }
+
+        function saveMatchChanges() {
+            const id = document.getElementById('editMatchId').value;
+            const m = allMatches.find(x => x.id === id);
+            if(m) {
+                m.title = document.getElementById('editTitle').value;
+                m.tag = document.getElementById('editTag').value;
+                m.fee = parseInt(document.getElementById('editFee').value) || 0;
+                m.joined = parseInt(document.getElementById('editJoined').value) || 0;
+                m.total = parseInt(document.getElementById('editTotal').value) || 48;
+                m.roomId = document.getElementById('editRoomId').value;
+                m.roomPass = document.getElementById('editRoomPass').value;
+                saveMatches();
+                document.getElementById('matchEditor').classList.add('hidden');
+                renderAdminList();
+            }
+        }
+
+        function updateLiveVideo() {
+            const link = document.getElementById('liveVidLink').value;
+            if(link) {
+                let vidId = link.split('v=')[1] || link.split('/').pop();
+                const embedUrl = `https://www.youtube.com/embed/${vidId}?autoplay=1&mute=1&loop=1&playlist=${vidId}&controls=0&showinfo=0&rel=0&modestbranding=1`;
+                document.getElementById('heroVideo').src = embedUrl;
+                localStorage.setItem('liveVideoUrl', embedUrl);
+                alert("Video Updated!");
+            }
+        }
+
+        function updateDetails() {
+            const details = {
+                offLoc: document.getElementById('detOffLoc').value,
+                offDate: document.getElementById('detOffDate').value,
+                offEntry: document.getElementById('detOffEntry').value,
+                offP1: document.getElementById('detOffP1').value,
+            };
+            localStorage.setItem('tourneyDetails', JSON.stringify(details));
+            loadDynamicDetails();
+            alert("Details Updated!");
+        }
+
+        function loadDynamicDetails() {
+            const vid = localStorage.getItem('liveVideoUrl');
+            if(vid) document.getElementById('heroVideo').src = vid;
+
+            const det = JSON.parse(localStorage.getItem('tourneyDetails'));
+            if(det) {
+                if(det.offLoc) document.getElementById('dynOffLoc').innerText = det.offLoc;
+                if(det.offDate) document.getElementById('dynOffTime').innerText = det.offDate;
+                if(det.offEntry) document.getElementById('dynOffEntry').innerText = det.offEntry;
+                if(det.offP1) document.getElementById('dynOffP1').innerText = det.offP1;
+            }
+        }
+
+        // --- INIT ---
+        window.onload = () => { renderMatches(); initThreeJS(); loadDynamicDetails(); updateReqCount(); }
+        
+        function initThreeJS() {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.002);
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            camera.position.z = 100; camera.position.y = 50; camera.rotation.x = -0.2;
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+            
+            const particlesGeo = new THREE.BufferGeometry();
+            const count = 1000;
+            const pos = new Float32Array(count * 3);
+            for(let i=0; i<count*3; i++) pos[i] = (Math.random()-0.5) * 800;
+            particlesGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            const particlesMat = new THREE.PointsMaterial({ size: 2, color: 0x06b6d4, transparent: true, opacity: 0.8 });
+            const particles = new THREE.Points(particlesGeo, particlesMat);
+            scene.add(particles);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                camera.position.z -= 0.1;
+                if(camera.position.z < 0) camera.position.z = 100;
+                renderer.render(scene, camera);
+            }
+            animate();
+            window.addEventListener('resize', () => { camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+        }
+
+        const fakes = ["Rocky", "Killer", "Devil", "God", "Sniper"];
+        setInterval(() => {
+            const list = document.getElementById('joinersList');
+            const div = document.createElement('div');
+            div.className="flex items-center gap-3 bg-gray-900/80 p-2 rounded-lg animate-fade-in-down border border-green-500/50 shadow-lg backdrop-blur-sm w-48";
+            div.innerHTML=`<div class="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs">👤</div><div class="flex-1"><p class="text-[10px] font-bold text-white uppercase">${fakes[Math.floor(Math.random()*fakes.length)]}</p><p class="text-[8px] text-green-400 font-bold">JOINED A MATCH</p></div>`;
+            list.insertBefore(div, list.children[0]);
+            if(list.children.length > 2) list.removeChild(list.lastElementChild);
+        }, 5000);
+        function toggleLanguage() { /* Placeholder */ }
     </script>
 </body>
 </html>
